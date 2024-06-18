@@ -207,6 +207,7 @@
     </ClCompile>
     <ClCompile Include="ShoesProject.cpp" />
     <ClCompile Include="ShoesProjectDlg.cpp" />
+    <ClCompile Include="SupportFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ShoesProject.rc" />

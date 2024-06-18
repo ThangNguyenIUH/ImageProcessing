@@ -3,13 +3,8 @@
 //
 
 #include "pch.h"
-#include "framework.h"
 #include "ShoesProject.h"
 #include "ShoesProjectDlg.h"
-#include "afxdialogex.h"
-#include <cstring>
-#include <string>
-#include <filesystem>
 
 
 #ifdef _DEBUG
@@ -64,8 +59,8 @@ void CShoesProjectDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BROWSE_FOLDER, m_file_dir1);
-	DDX_Control(pDX, IDC_LIST1, m_list_file1);
-	DDX_Control(pDX, IDC_LIST2, m_list_folder1);
+	DDX_Control(pDX, IDC_LIST1,  m_list_folder1);
+	DDX_Control(pDX, IDC_LIST2, m_list_file1);
 }
 
 BEGIN_MESSAGE_MAP(CShoesProjectDlg, CDialogEx)
@@ -73,6 +68,8 @@ BEGIN_MESSAGE_MAP(CShoesProjectDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_BROWSER, &CShoesProjectDlg::OnBnClickedBtnBrowser)
+	ON_LBN_SELCHANGE(IDC_LIST2, &CShoesProjectDlg::OnLbnSelchangeList2)
+	ON_LBN_SELCHANGE(IDC_LIST1, &CShoesProjectDlg::OnLbnSelchangeList1)
 END_MESSAGE_MAP()
 
 // CShoesProjectDlg message handlers
@@ -154,79 +151,6 @@ void CShoesProjectDlg::OnPaint()
 	}
 }
 
-void GetImageLists(CString path2Folder, vector<CString>& listImagePath) {
-	// Neu khong phai la empty folder
-	string path = CT2A(path2Folder);
-	vector<string> listImgPath;
-
-	if (PathIsDirectoryEmpty(path2Folder) == FALSE) {
-		string pattern(path);
-		pattern.append("\\*");
-		WIN32_FIND_DATA data;
-		HANDLE hFind;
-		std::wstring wstr(pattern.begin(), pattern.end());
-		if ((hFind = FindFirstFile(wstr.c_str(), &data)) != INVALID_HANDLE_VALUE)
-		{
-			do {
-				int bufferSize = WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, NULL, 0, NULL, NULL);
-				// Tạo buffer để chứa chuỗi đã chuyển đổi
-				std::string str_data(bufferSize, 0);
-				// Thực hiện chuyển đổi
-				WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, &str_data[0], bufferSize, NULL, NULL);
-				listImgPath.push_back(str_data);
-			} while (FindNextFile(hFind, &data) != 0);
-			FindClose(hFind);
-		}
-		for (const auto& cstr : listImgPath)
-		{
-			listImagePath.push_back(CString(cstr.c_str()));
-		}
-	}
-	else {
-		return;
-	}
-}
-
-void GetFolderLists(CString strDir, CStringArray& arrOut, BOOL fullPath, BOOL addRoot, BOOL isRescue)
-{
-	BOOL success;
-	CString tempFoldername;
-	WIN32_FIND_DATA FindFileData;
-	HANDLE  hFind;
-	hFind = FindFirstFile(CString(strDir) + _T("\\*.*"), &FindFileData);
-
-	if (addRoot)
-		arrOut.Add(CString(strDir));
-
-	do
-	{
-		success = FALSE;
-		if (hFind != INVALID_HANDLE_VALUE)
-		{
-			tempFoldername = FindFileData.cFileName;
-			if (tempFoldername.CompareNoCase(_T(".")) && tempFoldername.CompareNoCase(_T("..")))
-				if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				{
-					if (!fullPath)
-						arrOut.Add(tempFoldername);
-					else
-						arrOut.Add(CString(strDir) + '\\' + tempFoldername);
-
-					if (isRescue)
-					{
-						CString strFullPathDir;
-						strFullPathDir.Format(_T("%s\\%s"), strDir, tempFoldername.GetBuffer(0));
-						GetFolderLists(strFullPathDir.GetBuffer(0), arrOut, fullPath, FALSE, TRUE);
-					}
-				}
-			success = FindNextFile(hFind, &FindFileData);//tim ket thuc 	
-		}
-
-	} while (success);
-
-	FindClose(hFind);
-}
-
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CShoesProjectDlg::OnQueryDragIcon()
@@ -238,20 +162,6 @@ HCURSOR CShoesProjectDlg::OnQueryDragIcon()
 
 void CShoesProjectDlg::OnBnClickedBtnBrowser()
 {
-	//CFolderPickerDialog folderPicker;
-	//folderPicker.m_ofn.lpstrInitialDir = _T("D:\ImageTest");
-	//if (folderPicker.DoModal() == IDOK)
-	//{
-	//	m_folder1 = folderPicker.GetPathName();
-	//	m_file_dir1.SetWindowText(m_folder1);
-	//	vector <CString> listPath;
-	//	GetImageLists(m_folder1, listPath);
-	//	for (int i = 0; i < listPath.size(); i++)
-	//	{
-	//		m_list_file1.AddString(listPath[i]);
-	//	}
-	//}
-
 	LPCTSTR lpszTitle = _T("");
 	UINT	uFlags = BIF_RETURNONLYFSDIRS;// | BIF_USENEWUI;
 	CFolderDialog	dlg(lpszTitle, m_FolderPath, this, uFlags);
@@ -260,12 +170,59 @@ void CShoesProjectDlg::OnBnClickedBtnBrowser()
 	{
 		m_FolderPath = dlg.GetFolderPath();
 		SetDlgItemText(IDC_BROWSE_FOLDER, m_FolderPath);
-		CStringArray listPath;
+		CStringArray listFolderPath;
 
-		GetFolderLists(m_FolderPath, listPath, false, false, false);
-		for (int i = 0; i < listPath.GetSize(); i++)
+		GetFolderLists(m_FolderPath, listFolderPath, false, false, false);
+		for (int i = 0; i < listFolderPath.GetSize(); i++)
 		{
-			m_list_file1.AddString(listPath[i]);
+			m_list_folder1.AddString(listFolderPath[i]);
 		}
 	}
+
+}
+
+void CShoesProjectDlg::OnLbnSelchangeList1()
+{
+	int indexSelected = m_list_folder1.GetCurSel();
+	if (indexSelected == -1) return;
+	CString FolderSelected;
+	m_list_folder1.GetText(indexSelected, FolderSelected);
+
+	/// <summary>
+	/// lay danh sach cac anh trong folder va them vao list file
+	/// </summary>
+	string folderPath = CStringToString(FolderSelected);
+	vector <CString> listImagePath;
+	GetImageLists(m_FolderPath + "\\" + FolderSelected, listImagePath);
+	m_list_file1.ResetContent();
+	for (int i = 0; i < listImagePath.size(); i++)
+	{
+		if (listImagePath[i] == "." || listImagePath[i] == "..") continue;
+		m_list_file1.AddString(listImagePath[i]);
+	}
+}
+
+void CShoesProjectDlg::OnLbnSelchangeList2()
+{
+	//Lay file duoc chon
+	int indexFile = m_list_file1.GetCurSel();
+	CString fileSelected;
+	m_list_file1.GetText(indexFile, fileSelected);
+
+	// Tim duong dan truc tiep toi file duoc chon
+	int indexSelected = m_list_folder1.GetCurSel();
+	CString FolderSelected;
+	m_list_folder1.GetText(indexSelected, FolderSelected);
+
+	CString path2Image;
+	path2Image = m_FolderPath + "\\" + FolderSelected + "\\" + fileSelected;
+	// Load anh len 
+	m_original_img1 = imread(CStringToString(path2Image));
+	if (m_original_img1.data == nullptr)return;
+	// View image
+	CImage cimage;
+	Mat2CImage(m_original_img1, cimage);
+	CStatic* picturebox = (CStatic*)(GetDlgItem(IDC_PICCTRL1));
+	displayImage(picturebox, cimage);
+
 }
