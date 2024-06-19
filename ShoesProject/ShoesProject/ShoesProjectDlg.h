@@ -18,6 +18,22 @@
 using namespace std;
 using namespace cv;
 
+struct ImageSetting
+{
+	// Dung de dieu chinh pixel
+	float alpha = 1.0; //contrast
+	int beta = 0; //brightness
+	int sizeofKernel = 1; // blur
+
+	// Dung de affine
+	CPoint translate = CPoint(0.0 , 0.0);
+	float zoom_level = 1.0;
+	float rotateAngle = 0.0;
+
+	// Dung de luu tru thong so
+	CPoint translateD = CPoint(0.0, 0.0);
+	float rotateAngleD = 0.0;
+};
 
 // CShoesProjectDlg dialog
 class CShoesProjectDlg : public CDialogEx
@@ -55,5 +71,25 @@ public:
 	CListBox m_list_folder1;
 	CString m_FolderPath;
 	Mat m_original_img1;
+	ImageSetting imgSetting;
+	BOOL on_Translate = false;
+	BOOL on_Rotate = false;
+	CStatic* m_CtrlImage;
+	CPoint m_mouseUP, m_mouseDOWN, m_mouseMOVE;
+	BOOL PreTranslateMessage(MSG* pMSG);
+	CRect m_ClientRectImage;
+	void translateImage(Mat& image, int dx, int dy);
+	void zoomImage(Mat& image, float zoomLevel);
+	void rotateImage(Mat& image, float angle);
+	void setImage(CStatic*& picturbox, Mat& image);
+
+	void saveTranslate();
+	void saveRotater();
+	//void saveZoom();
+	void applyTransition(CStatic*& picturebox, Mat& image, ImageSetting imgsetting);
+	void moveImage();
+	void rotate();
+	void zoom(float z);
+	float calRotateImage(CPoint pt1, CPoint pt2);
 };
 

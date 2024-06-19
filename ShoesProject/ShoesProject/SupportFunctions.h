@@ -13,3 +13,4 @@ void GetFolderLists(CString strDir, CStringArray& arrOut, BOOL fullPath, BOOL ad
 std::string CStringToString(const CString& cString);
 void Mat2CImage(const Mat& srcImage, CImage& img);
 void displayImage(CStatic* picturebox, CImage& image);
+Mat paddingImage(const cv::Mat& image, float width, float height);
