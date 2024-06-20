@@ -59,8 +59,9 @@ void CShoesProjectDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BROWSE_FOLDER, m_file_dir1);
-	DDX_Control(pDX, IDC_LIST1,  m_list_folder1);
+	DDX_Control(pDX, IDC_LIST1, m_list_folder1);
 	DDX_Control(pDX, IDC_LIST2, m_list_file1);
+	DDX_Control(pDX, IDC_SLI_DEMPIXEL, m_slider_dempixelsang);
 }
 
 BEGIN_MESSAGE_MAP(CShoesProjectDlg, CDialogEx)
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CShoesProjectDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_BROWSER, &CShoesProjectDlg::OnBnClickedBtnBrowser)
 	ON_LBN_SELCHANGE(IDC_LIST2, &CShoesProjectDlg::OnLbnSelchangeList2)
 	ON_LBN_SELCHANGE(IDC_LIST1, &CShoesProjectDlg::OnLbnSelchangeList1)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLI_DEMPIXEL, &CShoesProjectDlg::OnNMCustomdrawSliDempixel)
 END_MESSAGE_MAP()
 
 // CShoesProjectDlg message handlers
@@ -108,6 +110,9 @@ BOOL CShoesProjectDlg::OnInitDialog()
 	ScreenToClient(&m_ClientRectImage);
 
 	m_CtrlImage = (CStatic*)(GetDlgItem(IDC_PICCTRL1));
+
+	// set range slider
+	m_slider_dempixelsang.SetRange(0, 255);
 
 	// TODO: Add extra initialization here
 
@@ -411,6 +416,18 @@ float CShoesProjectDlg::calRotateImage(CPoint pt1, CPoint pt2)
 	return a;
 }
 
+int CShoesProjectDlg::demSoLuongPixelSang(BYTE* pData8BitsIn, int width, int height, int threshold)
+{
+	int count = 0;
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			if (pData8BitsIn[y * width + x] >= (BYTE)threshold) count++;
+		}
+	}
+	return count;
+}
+
+
 void CShoesProjectDlg::OnLbnSelchangeList2()
 {
 	//Lay file duoc chon
@@ -434,4 +451,23 @@ void CShoesProjectDlg::OnLbnSelchangeList2()
 	CStatic* picturebox = (CStatic*)(GetDlgItem(IDC_PICCTRL1));
 	displayImage(picturebox, cimage);
 
+}
+
+
+
+void CShoesProjectDlg::OnNMCustomdrawSliDempixel(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	if (m_original_img1.empty()) return;
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	int value = m_slider_dempixelsang.GetPos();
+	// gray
+	Mat grayMat;
+	cvtColor(m_original_img1, grayMat, COLOR_BGR2GRAY);
+	//
+	int SOLUONG = demSoLuongPixelSang(grayMat.data, grayMat.cols, grayMat.rows, value);
+	CString sl;
+	sl.Format((CString)"(%d)", SOLUONG);
+	SetDlgItemText(IDC_STATIC_PIXEL , sl);
 }

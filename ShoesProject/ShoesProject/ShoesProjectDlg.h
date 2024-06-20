@@ -65,6 +65,7 @@ public:
 	afx_msg void OnBnClickedBtnBrowser();
 	afx_msg void OnLbnSelchangeList2();
 	afx_msg void OnLbnSelchangeList1();
+	afx_msg void OnNMCustomdrawSliDempixel(NMHDR* pNMHDR, LRESULT* pResult);
 	CEdit m_file_dir1;
 	CListBox m_list_file1;
 	CString m_folder1;
@@ -78,11 +79,11 @@ public:
 	CPoint m_mouseUP, m_mouseDOWN, m_mouseMOVE;
 	BOOL PreTranslateMessage(MSG* pMSG);
 	CRect m_ClientRectImage;
+	CSliderCtrl m_slider_dempixelsang;
 	void translateImage(Mat& image, int dx, int dy);
 	void zoomImage(Mat& image, float zoomLevel);
 	void rotateImage(Mat& image, float angle);
 	void setImage(CStatic*& picturbox, Mat& image);
-
 	void saveTranslate();
 	void saveRotater();
 	//void saveZoom();
@@ -91,5 +92,6 @@ public:
 	void rotate();
 	void zoom(float z);
 	float calRotateImage(CPoint pt1, CPoint pt2);
+	int demSoLuongPixelSang(BYTE* pData8BitsIn, int width, int height, int threshold);
 };
 
